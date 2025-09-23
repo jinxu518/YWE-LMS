@@ -1,3 +1,5 @@
+import configparser
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
@@ -13,8 +15,11 @@ import time
 # -----------------------------
 # 配置账号和网站（保持不改）
 # -----------------------------
-USERNAME = "us260025"
-PASSWORD = "ZJXzjx518,"
+CONFIG_FILE = "config.ini"
+config = configparser.ConfigParser()
+config.read(CONFIG_FILE, encoding="utf-8")
+USERNAME = config.get("credentials", "username")
+PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
 TASK_CODE = "TSK000000003451"  # 任务编号-每次替换
