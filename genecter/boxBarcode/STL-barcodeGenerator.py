@@ -54,9 +54,5 @@ def generate_barcodes(prefix, start_box, end_box):
 
 if __name__ == "__main__":
     prefix = input("请输入前缀: ")  # 比如 TSK000000003436
-
-    # 生成 301-335 的 PDF
-    generate_barcodes(prefix, 301, 335)
-
     # 生成 401-416 的 PDF
     generate_barcodes(prefix, 401, 416)
