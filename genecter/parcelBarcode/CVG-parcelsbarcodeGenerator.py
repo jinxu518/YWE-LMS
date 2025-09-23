@@ -185,7 +185,7 @@ def main():
     driver.quit()
 
     # 生成 PDF
-    generate_barcodes_pdf(all_barcodes, filename="../CVG分箱包裹号.pdf")
+    generate_barcodes_pdf(all_barcodes, filename="./CVG分箱包裹号.pdf")
 
 if __name__ == "__main__":
     main()
