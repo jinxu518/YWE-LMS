@@ -22,7 +22,7 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-TASK_CODE = "TSK000000003436"  # 任务编号-每次替换
+TASK_CODE = "TSK000000003548"  # 任务编号-每次替换
 
 # -----------------------------
 # PDF生成函数（只显示分箱号，支持中文字体）
@@ -34,7 +34,7 @@ def generate_barcodes_pdf(barcode_data, filename="barcodes.pdf"):
     page_width, page_height = A4
 
     cols, rows = 3, 6
-    x_margin, y_margin = 20 * mm, 20 * mm
+    x_margin, y_margin = 10 * mm, 10 * mm
     x_spacing, y_spacing = 65 * mm, 45 * mm
     x0, y0 = x_margin, page_height - y_margin
     col, row = 0, 0
@@ -121,8 +121,8 @@ def main():
 
     all_barcodes = []
 
-    # 分箱号列表：301-335
-    cage_numbers = list(range(401, 417))
+    # 分箱号列表：150-188 + 228,229
+    cage_numbers = list(range(150, 189)) + [228, 229]
 
     # 循环分箱号
     for cage_number in cage_numbers:
@@ -185,7 +185,7 @@ def main():
     driver.quit()
 
     # 生成 PDF
-    generate_barcodes_pdf(all_barcodes, filename="./STL箱包裹号.pdf")
+    generate_barcodes_pdf(all_barcodes, filename="./IND分箱包裹号.pdf")
 
 if __name__ == "__main__":
     main()

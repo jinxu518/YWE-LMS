@@ -55,7 +55,7 @@ def generate_barcodes(prefix, box_numbers):
 
 
 if __name__ == "__main__":
-    prefix = input("请输入前缀: ")  # 比如 TSK000000003436
+    prefix = input("请输入前缀: ")  # 比如 TSK000000003548
     # 连续分箱号 150-188，再加上 228,229
     box_numbers = list(range(150, 189)) + [228, 229]
     generate_barcodes(prefix, box_numbers)
