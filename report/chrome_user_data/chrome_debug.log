@@ -1,0 +1,29 @@
+[20760:20852:0928/103143.961:INFO:components\enterprise\browser\controller\chrome_browser_cloud_management_controller.cc:206] No machine level policy manager exists.
+[20760:20852:0928/103150.075:INFO:CONSOLE:1] "function(e){throw new Error("'new Fingerprint()' is deprecated, see https://github.com/fingerprintjs/fingerprintjs#upgrade-guide-from-182-to-200")}", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103150.313:INFO:CONSOLE:0] "[DOM] Input elements should have autocomplete attributes (suggested: "current-password"): (More info: https://goo.gl/9p2vKq) %o", source: https://console.yanwentech.com/p/login/ywwl (0)
+[20760:20852:0928/103151.310:INFO:CONSOLE:1] "finger: 569c7e65d633ee6678844901d28c3abd", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103151.627:INFO:CONSOLE:1] "[object Object]", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103151.895:INFO:CONSOLE:1] "Error while trying to use the following icon from the Manifest: https://console.yanwentech.com/assert/logo192.png (Download error or resource isn't a valid image)", source: https://console.yanwentech.com/ (1)
+[20760:20852:0928/103155.122:INFO:CONSOLE:1] "function(e){throw new Error("'new Fingerprint()' is deprecated, see https://github.com/fingerprintjs/fingerprintjs#upgrade-guide-from-182-to-200")}", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.165:INFO:CONSOLE:1] "function(e){throw new Error("'new Fingerprint()' is deprecated, see https://github.com/fingerprintjs/fingerprintjs#upgrade-guide-from-182-to-200")}", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.453:INFO:CONSOLE:1] "[object Object]", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.675:INFO:CONSOLE:1] "function(e){throw new Error("'new Fingerprint()' is deprecated, see https://github.com/fingerprintjs/fingerprintjs#upgrade-guide-from-182-to-200")}", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.686:INFO:CONSOLE:1] "function(e){throw new Error("'new Fingerprint()' is deprecated, see https://github.com/fingerprintjs/fingerprintjs#upgrade-guide-from-182-to-200")}", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.686:INFO:CONSOLE:1] "main refresh ", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103155.686:INFO:CONSOLE:1] "main refresh ", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103156.548:INFO:CONSOLE:1] "[object Object]", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103156.548:INFO:CONSOLE:1] "main refresh ", source: https://console.yanwentech.com/static/js/main.f7cdb55c.chunk.js (1)
+[20760:20852:0928/103200.222:INFO:CONSOLE:84] "[EntryLoader]欢迎使用入口加载器，目前支持调试的url参数有： [object Object]", source: https://qbi.yanwentech.com/assets/web-resource/entry-loader.js?ind_v4.6.2 (84)
+[20760:20852:0928/103201.965:INFO:CONSOLE:268] "all resources loaded.", source: https://qbi.yanwentech.com/assets/web-resource/entry-loader.js?ind_v4.6.2 (268)
+[20760:9072:0928/103204.797:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: DEPRECATED_ENDPOINT
+[20760:9072:0928/103204.829:ERROR:google_apis\gcm\engine\registration_request.cc:291] Registration response error message: PHONE_REGISTRATION_ERROR
+[20760:9072:0928/103205.019:ERROR:google_apis\gcm\engine\mcs_client.cc:700]   Error code: 401  Error message: Authentication Failed: wrong_secret
+[20760:9072:0928/103205.019:ERROR:google_apis\gcm\engine\mcs_client.cc:702] Failed to log in to GCM, resetting connection.
+[20760:20852:0928/103206.450:INFO:CONSOLE:1] "[LOCAZ-DEBUG] [Detector] Detected request languages:  zh-CN", source: https://qbi.yanwentech.com/assets/web-resource/85558.4de7.chunk.js (1)
+[20760:20852:0928/103206.451:INFO:CONSOLE:1] "[LOCAZ-DEBUG] [Locaz] Current using locale: zh-CN", source: https://qbi.yanwentech.com/assets/web-resource/85558.4de7.chunk.js (1)
+[20760:20852:0928/103206.516:INFO:CONSOLE:1] "[Collector]开启(初始化)采集器", source: https://qbi.yanwentech.com/assets/web-resource/85558.4de7.chunk.js (1)
+[20760:20852:0928/103206.538:INFO:CONSOLE:1] "[Deprecated]请勿使用此"Request()"函数，此函数将被移除，请使用新Pont的API接口代替（若实在需要底层请求，可直接使用"httpFetcher"）", source: https://qbi.yanwentech.com/assets/web-resource/43024.9a0e.chunk.js (1)
+[20760:20852:0928/103207.720:INFO:CONSOLE:1] "[createQbiCollector]首屏性能数据： [object Object]", source: https://qbi.yanwentech.com/assets/web-resource/85558.4de7.chunk.js (1)
+[20760:20852:0928/103208.526:INFO:CONSOLE:1] "[Reporter/reportConsoleLog]埋点结果上报到console： [object Object]", source: https://qbi.yanwentech.com/assets/web-resource/85558.4de7.chunk.js (1)
+[32748:3552:0928/103213.833:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
+[32748:3552:0928/103213.833:WARNING:net\extras\sqlite\sqlite_persistent_store_backend_base.cc:176] Failed to post task from FlushAndNotifyInBackground@net\extras\sqlite\sqlite_persistent_store_backend_base.cc:226 to client_task_runner_.
