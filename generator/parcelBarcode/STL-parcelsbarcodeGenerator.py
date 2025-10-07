@@ -22,7 +22,7 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-TASK_CODE = "TSK000000003676"  # 任务编号-每次替换
+TASK_CODE = "TSK000000003753"  # 任务编号-每次替换
 
 # -----------------------------
 # PDF生成函数（只显示分箱号，支持中文字体）
