@@ -18,7 +18,11 @@ config.read(CONFIG_FILE, encoding="utf-8")
 USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
-TASK_CODE = "TSK000000004001"
+
+
+TASK_CODE = "TSK000000004001" #分箱任务编号，每次替换
+
+
 MAX_RETRIES = 3  # 重试次数
 
 
