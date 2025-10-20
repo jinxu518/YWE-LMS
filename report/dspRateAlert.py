@@ -100,7 +100,7 @@ def click_fourth_tab():
             EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".story-builder-tabs li.story-builder-tab")))
 
         if len(tabs) >= 4:
-            fourth_tab = tabs[3]  # 修改：索引改为3，即第4个tab
+            fourth_tab = tabs[3]
             print(f"找到 {len(tabs)} 个tabs")
 
             driver.execute_script("arguments[0].scrollIntoView({block: 'center'});", fourth_tab)
@@ -124,9 +124,9 @@ def click_fourth_tab():
 
 
 def set_dates_via_calendar():
-    """通过点击日历设置日期 - 修改为昨天到今天"""
+    """通过点击日历设置日期 - 昨天到今天"""
     today = datetime.today()
-    yesterday = today - timedelta(days=1)  # 修改：改为昨天
+    yesterday = today - timedelta(days=1)
     start_str = yesterday.strftime("%Y-%m-%d")
     end_str = today.strftime("%Y-%m-%d")
     start_day = yesterday.strftime("%d").lstrip('0')
@@ -251,15 +251,14 @@ def set_single_date_via_calendar(picker_info, target_day, target_date, date_type
 
 
 def set_warehouse_selection():
-    """设置提货仓选择 - 完整优化版"""
-    target_warehouses = ["ORD01", "IND01", "CVG01", "CVG02", "STL01"]
+    """设置提货仓选择 - 添加了COL"""
+    target_warehouses = ["ORD01", "IND01", "CVG01", "CVG02", "STL01", "COL01"]  # 添加了COL01
 
     try:
         print(f"\n{'=' * 60}")
         print(f"开始设置提货仓: {', '.join(target_warehouses)}")
         print(f"{'=' * 60}")
 
-        # ========== 步骤1: 打开选择器并等待数据稳定 ==========
         print("\n[步骤1] 查找并打开提货仓选择器...")
         selector_info = driver.execute_script("""
             var allSelectors = document.querySelectorAll('.query-field-wrapper, .enum-select, .advance-select');
@@ -311,7 +310,6 @@ def set_warehouse_selection():
 
         print("✓ 选择器已打开")
 
-        # 等待数据加载并稳定
         print("\n→ 监测选择器数据稳定性...")
 
         stable_required = 4
@@ -356,7 +354,6 @@ def set_warehouse_selection():
         print("→ 最后等待5秒再执行清空...")
         time.sleep(5)
 
-        # ========== 步骤2: 逐个删除已选项 ==========
         print(f"\n[步骤2] 逐个删除已选的默认选项...")
         time.sleep(2)
 
@@ -417,14 +414,12 @@ def set_warehouse_selection():
 
         time.sleep(2)
 
-        # ========== 步骤3: 逐个搜索并选择 ==========
         print(f"\n[步骤3] 开始搜索并添加仓库...")
         selected_count = 0
 
         for idx, warehouse in enumerate(target_warehouses, 1):
             print(f"\n  [{idx}/{len(target_warehouses)}] 处理仓库: {warehouse}")
 
-            # 统一使用JavaScript输入
             print(f"    → 输入: {warehouse}")
             input_result = driver.execute_script(f"""
                 var searchInput = document.querySelector('.advance-select-search input, input[placeholder*="查询"]');
@@ -455,7 +450,6 @@ def set_warehouse_selection():
             except Exception as e:
                 print(f"    ⚠ 按回车失败: {e}")
 
-            # 统一等待5秒
             print(f"    → 等待搜索过滤... (5秒)")
             time.sleep(5)
 
@@ -478,9 +472,8 @@ def set_warehouse_selection():
 
             print(f"    → 过滤后: {filtered_count} 个选项")
 
-            # STL01滚动处理
-            if warehouse == "STL01":
-                print(f"    → STL01特殊处理：滚动选项列表")
+            if warehouse in ["STL01", "COL01"]:
+                print(f"    → {warehouse}特殊处理：滚动选项列表")
                 try:
                     scroll_result = driver.execute_script("""
                         var containers = ['.advance-select-items', '.ReactVirtualized__Grid', '.ant-select-dropdown'];
@@ -516,7 +509,6 @@ def set_warehouse_selection():
                 except Exception as e:
                     print(f"      ⚠ 滚动失败: {e}")
 
-            # 统一尝试3次
             max_attempts = 3
             option_found = False
 
@@ -589,7 +581,6 @@ def set_warehouse_selection():
 
         print(f"\n  完成: {selected_count}/{len(target_warehouses)} 个仓库已选择")
 
-        # ========== 步骤4: 点击确定 ==========
         print("\n[步骤4] 点击确定按钮...")
         time.sleep(1)
 
@@ -644,13 +635,12 @@ def set_warehouse_selection():
 
 
 def set_delivery_completion_rate():
-    """新增：设置分箱配送完成率为0.8"""
+    """设置分箱配送完成率为0.8"""
     try:
         print(f"\n{'=' * 60}")
         print("设置分箱配送完成率为 0.8")
         print(f"{'=' * 60}")
 
-        # 直接查找 ant-input-number-input 类的输入框，值为0.9的
         input_info = driver.execute_script("""
             var allInputs = document.querySelectorAll('input.ant-input-number-input');
             var targetInput = null;
@@ -661,7 +651,6 @@ def set_delivery_completion_rate():
                 var isVisible = rect.width > 0 && rect.height > 0 && input.offsetParent !== null;
                 var value = input.value;
 
-                // 查找值为0.9的输入框
                 if (isVisible && (value === '0.9' || value === '0.90')) {
                     targetInput = {
                         element: input,
@@ -678,27 +667,10 @@ def set_delivery_completion_rate():
 
         if not input_info:
             print("❌ 未找到值为0.9的配送完成率输入框")
-            # 尝试查找所有ant-input-number-input并打印
-            all_inputs = driver.execute_script("""
-                var inputs = document.querySelectorAll('input.ant-input-number-input');
-                var result = [];
-                for (var i = 0; i < inputs.length; i++) {
-                    var rect = inputs[i].getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        result.push({
-                            value: inputs[i].value,
-                            placeholder: inputs[i].placeholder
-                        });
-                    }
-                }
-                return result;
-            """)
-            print(f"找到的所有数字输入框: {all_inputs}")
             return False
 
         print(f"✓ 找到输入框，当前值: {input_info['currentValue']}, 位置: ({input_info['x']}, {input_info['y']})")
 
-        # 高亮输入框
         driver.execute_script(
             "arguments[0].style.border='3px solid blue';"
             "arguments[0].style.backgroundColor='lightyellow';",
@@ -706,24 +678,17 @@ def set_delivery_completion_rate():
         )
         time.sleep(1)
 
-        # 方法1: 先用Selenium点击并清空
         try:
             input_info['element'].click()
             time.sleep(0.5)
-
-            # 全选
             input_info['element'].send_keys(Keys.CONTROL + "a")
             time.sleep(0.3)
-
-            # 删除
             input_info['element'].send_keys(Keys.BACKSPACE)
             time.sleep(0.5)
-
             print("  → 已清空输入框")
         except Exception as e:
             print(f"  ⚠ Selenium清空失败: {e}")
 
-        # 方法2: 使用JavaScript强制清空
         driver.execute_script("""
             var input = arguments[0];
             input.value = '';
@@ -731,14 +696,12 @@ def set_delivery_completion_rate():
         """, input_info['element'])
         time.sleep(0.5)
 
-        # 方法3: 使用Selenium输入新值
         try:
             input_info['element'].send_keys("0.8")
             time.sleep(0.5)
             print("  → 已输入 0.8 (Selenium)")
         except Exception as e:
             print(f"  ⚠ Selenium输入失败: {e}")
-            # 备用：JavaScript输入
             driver.execute_script("""
                 arguments[0].value = '0.8';
             """, input_info['element'])
@@ -746,27 +709,17 @@ def set_delivery_completion_rate():
 
         time.sleep(0.5)
 
-        # 方法4: 触发所有可能的事件
         driver.execute_script("""
             var input = arguments[0];
-
-            // 触发输入事件
             input.dispatchEvent(new Event('input', {bubbles: true, cancelable: true}));
-
-            // 触发change事件
             input.dispatchEvent(new Event('change', {bubbles: true, cancelable: true}));
-
-            // 触发键盘事件
             input.dispatchEvent(new KeyboardEvent('keydown', {bubbles: true, cancelable: true}));
             input.dispatchEvent(new KeyboardEvent('keyup', {bubbles: true, cancelable: true}));
-
-            // 触发焦点事件
             input.dispatchEvent(new FocusEvent('blur', {bubbles: true, cancelable: true}));
         """, input_info['element'])
 
         time.sleep(1)
 
-        # 验证值是否改变
         final_value = driver.execute_script("return arguments[0].value;", input_info['element'])
         print(f"  → 最终值: {final_value}")
 
@@ -774,7 +727,6 @@ def set_delivery_completion_rate():
             print(f"✓ 成功设置配送完成率为: {final_value}")
         else:
             print(f"⚠ 值可能未正确设置，当前显示: {final_value}")
-            # 最后一次尝试
             driver.execute_script("""
                 var input = arguments[0];
                 var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, "value").set;
@@ -786,11 +738,10 @@ def set_delivery_completion_rate():
             final_value = driver.execute_script("return arguments[0].value;", input_info['element'])
             print(f"  → 最后尝试后的值: {final_value}")
 
-        # 移除高亮
         driver.execute_script("arguments[0].style.border=''; arguments[0].style.backgroundColor='';",
                               input_info['element'])
 
-        time.sleep(2)  # 增加等待时间，确保值生效
+        time.sleep(2)
 
         print(f"{'=' * 60}")
         print("✓ 配送完成率设置完成")
@@ -806,17 +757,15 @@ def set_delivery_completion_rate():
 
 
 def select_delivery_rate_fields():
-    """新增：在已选字段中选择1天、2天、3天妥投率"""
+    """在已选字段中选择1天、2天、3天妥投率 - 修复版"""
     try:
         print(f"\n{'=' * 60}")
         print("设置已选字段：选择妥投率")
         print(f"{'=' * 60}")
 
-        # 步骤1: 查找并点击"已选字段"下拉触发器
         print("\n[步骤1] 查找并点击'已选字段'下拉触发器...")
 
         field_button_info = driver.execute_script("""
-            // 方法1: 精确查找 ant-dropdown-trigger indicator-filter-dropdown
             var dropdown = document.querySelector('.ant-dropdown-trigger.indicator-filter-dropdown');
 
             if (dropdown) {
@@ -838,29 +787,6 @@ def select_delivery_rate_fields():
                 }
             }
 
-            // 方法2: 通过indicator-filter-title查找
-            var titleSpans = document.querySelectorAll('.indicator-filter-title');
-            for (var i = 0; i < titleSpans.length; i++) {
-                var span = titleSpans[i];
-                var text = span.textContent || span.innerText || '';
-
-                if (text.includes('已选字段')) {
-                    var parent = span.parentElement;
-                    var rect = parent.getBoundingClientRect();
-
-                    if (rect.width > 0 && rect.height > 0 && parent.offsetParent !== null) {
-                        return {
-                            element: parent,
-                            text: text.trim(),
-                            x: Math.round(rect.x),
-                            y: Math.round(rect.y),
-                            className: parent.className,
-                            method: 'parent'
-                        };
-                    }
-                }
-            }
-
             return null;
         """)
 
@@ -868,12 +794,10 @@ def select_delivery_rate_fields():
             print("❌ 未找到'已选字段'下拉触发器")
             return False
 
-        print(f"✓ 找到'已选字段'下拉触发器 (方法: {field_button_info.get('method', 'unknown')})")
+        print(f"✓ 找到'已选字段'下拉触发器")
         print(f"  文本: {field_button_info['text']}")
         print(f"  位置: ({field_button_info['x']}, {field_button_info['y']})")
-        print(f"  类名: {field_button_info['className']}")
 
-        # 高亮并点击
         driver.execute_script(
             "arguments[0].style.border='3px solid blue';"
             "arguments[0].style.boxShadow='0 0 10px blue';"
@@ -889,9 +813,8 @@ def select_delivery_rate_fields():
             driver.execute_script("arguments[0].click();", field_button_info['element'])
             print("✓ 已点击'已选字段'（JavaScript点击）")
 
-        time.sleep(3)
+        time.sleep(4)
 
-        # 移除高亮
         driver.execute_script(
             "arguments[0].style.border='';"
             "arguments[0].style.boxShadow='';"
@@ -899,13 +822,10 @@ def select_delivery_rate_fields():
             field_button_info['element']
         )
 
-        # 步骤2: 列出所有可选字段（调试用）
         print("\n[步骤2] 列出所有可选字段...")
 
         all_available_fields = driver.execute_script("""
             var allFields = [];
-
-            // 正确的容器：filter-indicator-container，不是ant-dropdown！
             var items = document.querySelectorAll(
                 '.filter-indicator-container .menu-item-type-field, ' +
                 '.filter-indicator-container .ant-tree-treenode'
@@ -953,471 +873,283 @@ def select_delivery_rate_fields():
             print(f"{idx:3d}. [{checked_status}] {field['text']}")
         print("=" * 80)
 
-        # 步骤3: 让用户确认
-        print("\n请查看上面列出的字段。")
-        print("脚本将选择: 1天妥投率, 2天妥投率, 3天妥投率")
-        print("\n继续等待3秒后选择...")
-        time.sleep(3)
-
-        # 步骤4: 选择字段
         target_fields = ["1天妥投率", "2天妥投率", "3天妥投率"]
         print(f"\n[步骤3] 开始选择字段: {', '.join(target_fields)}")
+        print("  → 每个字段将尝试最多3次，确保勾选成功")
 
         selected_count = 0
 
         for idx, field_name in enumerate(target_fields, 1):
-            print(f"\n  [{idx}/{len(target_fields)}] 查找字段: {field_name}")
+            print(f"\n  [{idx}/{len(target_fields)}] 处理字段: {field_name}")
 
-            # 在正确的容器里查找字段
-            field_result = driver.execute_script(f"""
-                var fieldName = '{field_name}';
+            # 每个字段最多尝试3次
+            field_checked = False
 
-                // 在 filter-indicator-container 里查找
-                var allItems = document.querySelectorAll('.filter-indicator-container .menu-item-type-field');
+            for try_num in range(1, 4):
+                if try_num > 1:
+                    print(f"    → 第{try_num}次尝试...")
+                    time.sleep(1)
 
-                for (var i = 0; i < allItems.length; i++) {{
-                    var item = allItems[i];
-                    var textSpan = item.querySelector('.menu-item-name-text');
+                field_result = driver.execute_script(f"""
+                    var fieldName = '{field_name}';
+                    var allItems = document.querySelectorAll('.filter-indicator-container .menu-item-type-field');
 
-                    if (textSpan) {{
-                        var text = (textSpan.textContent || textSpan.innerText || '').trim();
+                    for (var i = 0; i < allItems.length; i++) {{
+                        var item = allItems[i];
+                        var textSpan = item.querySelector('.menu-item-name-text');
 
-                        if (text === fieldName) {{
-                            var rect = item.getBoundingClientRect();
-                            var isVisible = rect.width > 0 && rect.height > 0 && item.offsetParent !== null;
+                        if (textSpan) {{
+                            var text = (textSpan.textContent || textSpan.innerText || '').trim();
 
-                            if (isVisible) {{
-                                var checkbox = item.querySelector('input[type="checkbox"]');
+                            if (text === fieldName) {{
+                                var rect = item.getBoundingClientRect();
+                                var isVisible = rect.width > 0 && rect.height > 0 && item.offsetParent !== null;
 
-                                return {{
-                                    element: item,
-                                    checkbox: checkbox,
-                                    text: text,
-                                    x: Math.round(rect.x),
-                                    y: Math.round(rect.y),
-                                    isChecked: checkbox ? checkbox.checked : false,
-                                    isDisabled: checkbox ? checkbox.disabled : false
-                                }};
-                            }}
-                        }}
-                    }}
-                }}
+                                if (isVisible) {{
+                                    var checkbox = item.querySelector('input[type="checkbox"]');
 
-                return null;
-            """)
+                                    // 滚动到可见区域
+                                    item.scrollIntoView({{block: 'center', behavior: 'smooth'}});
 
-            if not field_result:
-                print(f"    ❌ 未找到字段: {field_name}")
-                continue
-
-            print(f"    ✓ 找到字段: {field_result['text']}")
-            print(f"      位置: ({field_result['x']}, {field_result['y']})")
-            print(f"      状态: {'已勾选' if field_result.get('isChecked') else '未勾选'}")
-
-            # 如果已经勾选，跳过
-            if field_result.get('isChecked'):
-                print(f"    → 字段已勾选，跳过")
-                continue
-
-            # 如果禁用，跳过
-            if field_result.get('isDisabled'):
-                print(f"    → 字段已禁用，跳过")
-                continue
-
-            # 高亮
-            driver.execute_script(
-                "arguments[0].style.border='2px solid green';"
-                "arguments[0].style.backgroundColor='lightgreen';",
-                field_result['element']
-            )
-            time.sleep(0.8)
-
-            # 点击checkbox
-            if field_result.get('checkbox'):
-                try:
-                    checkbox_elem = driver.execute_script("return arguments[0];", field_result['checkbox'])
-
-                    # 使用JavaScript点击
-                    driver.execute_script("arguments[0].click();", checkbox_elem)
-                    print(f"    ✓ 已勾选checkbox")
-                    selected_count += 1
-                    time.sleep(0.5)
-
-                    # 验证是否勾选成功
-                    is_checked_now = driver.execute_script("return arguments[0].checked;", checkbox_elem)
-                    if is_checked_now:
-                        print(f"    ✓ 验证：checkbox已成功勾选")
-                    else:
-                        print(f"    ⚠ 警告：checkbox可能未成功勾选")
-
-                except Exception as e:
-                    print(f"    ❌ checkbox操作失败: {e}")
-
-            # 移除高亮
-            driver.execute_script(
-                "arguments[0].style.border='';"
-                "arguments[0].style.backgroundColor='';",
-                field_result['element']
-            )
-
-            time.sleep(1)
-
-        print(f"\n  完成: {selected_count}/{len(target_fields)} 个字段已选择")
-
-        # 步骤5: 不需要点确定按钮，直接关闭选择器
-        print("\n[步骤4] 关闭字段选择器...")
-        time.sleep(1)
-
-        # 再次点击"已选字段"来关闭
-        try:
-            field_button_info['element'].click()
-            print("✓ 已关闭字段选择器（点击已选字段）")
-        except:
-            driver.execute_script("arguments[0].click();", field_button_info['element'])
-            print("✓ 已关闭字段选择器（JavaScript点击）")
-
-        time.sleep(2)
-
-        print(f"\n{'=' * 60}")
-        print(f"✓ 已选字段设置完成（成功选择: {selected_count}/{len(target_fields)}）")
-        print(f"{'=' * 60}")
-
-        return True
-
-    except Exception as e:
-        print(f"\n❌ 设置已选字段异常: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-        # 步骤2: 等待下拉菜单出现
-        print("\n[步骤2] 等待下拉菜单出现...")
-        time.sleep(3)
-
-        # 检查下拉菜单是否出现
-        dropdown_visible = driver.execute_script("""
-            var dropdowns = document.querySelectorAll('.ant-dropdown, .dropdown-menu, [class*="dropdown"]');
-            for (var i = 0; i < dropdowns.length; i++) {
-                var dd = dropdowns[i];
-                var rect = dd.getBoundingClientRect();
-                if (rect.width > 0 && rect.height > 0 && dd.offsetParent !== null) {
-                    return {
-                        visible: true,
-                        className: dd.className,
-                        x: Math.round(rect.x),
-                        y: Math.round(rect.y)
-                    };
-                }
-            }
-            return {visible: false};
-        """)
-
-        if dropdown_visible.get('visible'):
-            print(f"✓ 下拉菜单已出现")
-            print(f"  类名: {dropdown_visible.get('className', 'N/A')}")
-            print(f"  位置: ({dropdown_visible.get('x', 0)}, {dropdown_visible.get('y', 0)})")
-        else:
-            print("⚠ 下拉菜单可能未出现，尝试继续")
-
-        # 步骤3: 查找并选择三个妥投率字段
-        target_fields = ["1天妥投率", "2天妥投率", "3天妥投率"]  # 修改为数字形式
-        print(f"\n[步骤3] 开始选择字段: {', '.join(target_fields)}")
-
-        selected_count = 0
-
-        for idx, field_name in enumerate(target_fields, 1):
-            print(f"\n  [{idx}/{len(target_fields)}] 查找字段: {field_name}")
-
-            # 查找字段选项
-            field_result = driver.execute_script(f"""
-                var fieldName = '{field_name}';
-
-                // 查找所有可能包含字段的元素
-                var allElements = document.querySelectorAll(
-                    '.ant-dropdown label, .ant-dropdown .ant-checkbox-wrapper, ' +
-                    '.dropdown-menu label, .dropdown-menu .checkbox, ' +
-                    'li, .menu-item, .ant-dropdown-menu-item, ' +
-                    'div[class*="item"], div[class*="field"], ' +
-                    'span, label'
-                );
-
-                var candidates = [];
-
-                for (var i = 0; i < allElements.length; i++) {{
-                    var elem = allElements[i];
-                    var text = elem.textContent || elem.innerText || '';
-                    var rect = elem.getBoundingClientRect();
-                    var isVisible = rect.width > 0 && rect.height > 0 && elem.offsetParent !== null;
-
-                    // 精确匹配字段名（去除空格后比较）
-                    var cleanText = text.trim().replace(/\\s+/g, '');
-                    var cleanFieldName = fieldName.replace(/\\s+/g, '');
-
-                    if (isVisible && (cleanText === cleanFieldName || text.trim() === fieldName)) {{
-                        // 查找关联的checkbox
-                        var checkbox = elem.querySelector('input[type="checkbox"]');
-                        if (!checkbox) {{
-                            var parent = elem.closest('label, .checkbox, .ant-checkbox-wrapper, li, .menu-item');
-                            if (parent) {{
-                                checkbox = parent.querySelector('input[type="checkbox"]');
-                            }}
-                        }}
-
-                        candidates.push({{
-                            element: elem,
-                            checkbox: checkbox,
-                            text: text.trim(),
-                            x: Math.round(rect.x),
-                            y: Math.round(rect.y),
-                            tag: elem.tagName,
-                            class: elem.className
-                        }});
-
-                        // 精确匹配就用第一个
-                        break;
-                    }}
-                }}
-
-                // 如果精确匹配没找到，尝试模糊匹配
-                if (candidates.length === 0) {{
-                    for (var i = 0; i < allElements.length; i++) {{
-                        var elem = allElements[i];
-                        var text = elem.textContent || elem.innerText || '';
-                        var rect = elem.getBoundingClientRect();
-                        var isVisible = rect.width > 0 && rect.height > 0 && elem.offsetParent !== null;
-
-                        if (isVisible && text.includes(fieldName)) {{
-                            var checkbox = elem.querySelector('input[type="checkbox"]');
-                            if (!checkbox) {{
-                                var parent = elem.closest('label, .checkbox, .ant-checkbox-wrapper, li, .menu-item');
-                                if (parent) {{
-                                    checkbox = parent.querySelector('input[type="checkbox"]');
+                                    return {{
+                                        element: item,
+                                        checkbox: checkbox,
+                                        text: text,
+                                        x: Math.round(rect.x),
+                                        y: Math.round(rect.y),
+                                        isChecked: checkbox ? checkbox.checked : false,
+                                        isDisabled: checkbox ? checkbox.disabled : false
+                                    }};
                                 }}
                             }}
-
-                            candidates.push({{
-                                element: elem,
-                                checkbox: checkbox,
-                                text: text.trim(),
-                                x: Math.round(rect.x),
-                                y: Math.round(rect.y),
-                                tag: elem.tagName,
-                                class: elem.className
-                            }});
-                            break;
                         }}
                     }}
-                }}
 
-                return candidates.length > 0 ? candidates[0] : null;
-            """)
-
-            if not field_result:
-                print(f"    ❌ 未找到字段: {field_name}")
-                # 调试信息 - 显示所有包含"妥投率"的文本
-                debug_fields = driver.execute_script("""
-                    var items = document.querySelectorAll('.ant-dropdown *, .dropdown-menu *');
-                    var texts = [];
-                    for (var i = 0; i < items.length; i++) {
-                        var rect = items[i].getBoundingClientRect();
-                        if (rect.width > 0 && rect.height > 0) {
-                            var text = (items[i].textContent || '').trim();
-                            if (text && text.includes('妥投率') && text.length < 50) {
-                                texts.push(text);
-                            }
-                        }
-                    }
-                    return [...new Set(texts)];
+                    return null;
                 """)
-                print(f"    调试：找到的妥投率相关字段: {debug_fields}")
-                continue
 
-            print(f"    ✓ 找到字段: {field_result['text']}")
-            print(f"      位置: ({field_result['x']}, {field_result['y']})")
-            print(f"      标签: {field_result['tag']}, 类: {field_result.get('class', 'N/A')[:50]}")
+                if not field_result:
+                    print(f"    ❌ 未找到字段: {field_name}")
+                    if try_num < 3:
+                        continue
+                    else:
+                        break
 
-            # 高亮
-            driver.execute_script(
-                "arguments[0].style.border='2px solid green';"
-                "arguments[0].style.backgroundColor='lightgreen';",
-                field_result['element']
-            )
-            time.sleep(0.8)
+                print(f"    ✓ 找到字段: {field_result['text']}")
+                print(f"      位置: ({field_result['x']}, {field_result['y']})")
+                print(f"      状态: {'已勾选' if field_result.get('isChecked') else '未勾选'}")
 
-            # 点击选择
-            clicked = False
+                if field_result.get('isChecked'):
+                    print(f"    → 字段已勾选")
+                    selected_count += 1
+                    field_checked = True
+                    break
 
-            # 方法1: 如果有checkbox，先检查是否已勾选
-            if field_result.get('checkbox'):
-                try:
-                    checkbox_elem = driver.execute_script("return arguments[0];", field_result['checkbox'])
-                    is_checked = driver.execute_script("return arguments[0].checked;", checkbox_elem)
+                if field_result.get('isDisabled'):
+                    print(f"    → 字段已禁用，跳过")
+                    break
 
-                    print(f"      Checkbox状态: {'已勾选' if is_checked else '未勾选'}")
+                # 高亮
+                driver.execute_script(
+                    "arguments[0].style.border='2px solid green';"
+                    "arguments[0].style.backgroundColor='lightgreen';",
+                    field_result['element']
+                )
+                time.sleep(0.5)
 
-                    if not is_checked:
-                        # 尝试点击checkbox
+                if field_result.get('checkbox'):
+                    try:
+                        checkbox_elem = driver.execute_script("return arguments[0];", field_result['checkbox'])
+
+                        # 尝试多种点击方式
+                        click_success = False
+
+                        # 方式1: JavaScript点击checkbox
                         try:
                             driver.execute_script("arguments[0].click();", checkbox_elem)
-                            clicked = True
-                            print(f"    ✓ 已勾选checkbox (JavaScript)")
+                            time.sleep(0.3)
+                            click_success = True
+                            print(f"    ✓ 已点击checkbox（JavaScript）")
                         except:
-                            # 如果checkbox不能点击，点击父元素
+                            pass
+
+                        # 方式2: 如果失败，点击父元素
+                        if not click_success:
                             try:
                                 field_result['element'].click()
-                                clicked = True
+                                time.sleep(0.3)
+                                click_success = True
                                 print(f"    ✓ 已点击字段元素")
                             except:
-                                driver.execute_script("arguments[0].click();", field_result['element'])
-                                clicked = True
-                                print(f"    ✓ 已点击字段元素 (JavaScript)")
-                    else:
-                        print(f"    → 字段已勾选，跳过")
-                        clicked = True
-                except Exception as e:
-                    print(f"    ⚠ checkbox操作失败: {e}")
+                                pass
 
-            # 方法2: 点击元素本身
-            if not clicked:
-                try:
-                    driver.execute_script("arguments[0].click();", field_result['element'])
-                    clicked = True
-                    print(f"    ✓ 已点击字段元素 (JavaScript)")
-                except Exception as e:
-                    print(f"    ❌ 点击失败: {e}")
+                        # 方式3: Selenium直接点击
+                        if not click_success:
+                            try:
+                                checkbox_elem.click()
+                                time.sleep(0.3)
+                                click_success = True
+                                print(f"    ✓ 已点击checkbox（Selenium）")
+                            except:
+                                pass
 
-            if clicked:
-                selected_count += 1
+                        if click_success:
+                            time.sleep(0.5)
 
-            # 移除高亮
-            driver.execute_script(
-                "arguments[0].style.border='';"
-                "arguments[0].style.backgroundColor='';",
-                field_result['element']
-            )
+                            # 验证是否勾选成功
+                            is_checked_now = driver.execute_script("return arguments[0].checked;", checkbox_elem)
+                            if is_checked_now:
+                                print(f"    ✓ 验证：checkbox已成功勾选")
+                                selected_count += 1
+                                field_checked = True
+                                break
+                            else:
+                                print(f"    ⚠ checkbox可能未成功勾选，将重试")
+                        else:
+                            print(f"    ⚠ 所有点击方式都失败")
 
-            time.sleep(1)
+                    except Exception as e:
+                        print(f"    ❌ checkbox操作失败: {e}")
 
-        print(f"\n  完成: {selected_count}/{len(target_fields)} 个字段已选择")
+                # 移除高亮
+                driver.execute_script(
+                    "arguments[0].style.border='';"
+                    "arguments[0].style.backgroundColor='';",
+                    field_result['element']
+                )
 
-        # 步骤4: 查找并点击确定按钮
+                time.sleep(0.8)
+
+            if not field_checked:
+                print(f"    ❌ 字段 '{field_name}' 最终未能成功勾选")
+
+        print(f"\n  ✓ 完成: {selected_count}/{len(target_fields)} 个字段已选择")
+
         print("\n[步骤4] 查找并点击确定按钮...")
-        time.sleep(1.5)
+        time.sleep(2)
 
-        # 尝试多种方式查找确定按钮
-        confirm_result = driver.execute_script("""
-            // 方法1: 在下拉菜单内查找确定按钮
-            var dropdowns = document.querySelectorAll('.ant-dropdown, .dropdown-menu');
-            var confirmButton = null;
+        # 多种方式查找确定按钮
+        confirm_button_clicked = False
 
-            for (var d = 0; d < dropdowns.length; d++) {
-                var dropdown = dropdowns[d];
-                var rect = dropdown.getBoundingClientRect();
+        # 方式1: 在弹出菜单中查找蓝色的确定按钮
+        for attempt in range(3):
+            print(f"  → 第{attempt + 1}次尝试查找确定按钮...")
 
-                if (rect.width > 0 && rect.height > 0 && dropdown.offsetParent !== null) {
-                    var buttons = dropdown.querySelectorAll('button');
-
-                    for (var i = 0; i < buttons.length; i++) {
-                        var btn = buttons[i];
-                        var text = (btn.textContent || btn.innerText || '').trim();
-                        var btnRect = btn.getBoundingClientRect();
-                        var isVisible = btnRect.width > 0 && btnRect.height > 0 && 
-                                      btn.offsetParent !== null && !btn.disabled;
-
-                        if (isVisible && (text === '确 定' || text === '确定' || text === 'OK' || text === '应用' || text === '完成')) {
-                            confirmButton = {
-                                element: btn,
-                                text: text,
-                                x: Math.round(btnRect.x),
-                                y: Math.round(btnRect.y),
-                                location: 'dropdown'
-                            };
-                            break;
-                        }
-                    }
-
-                    if (confirmButton) break;
-                }
-            }
-
-            // 方法2: 如果下拉菜单里没找到，在整个页面查找
-            if (!confirmButton) {
+            confirm_result = driver.execute_script("""
+                var confirmButton = null;
                 var allButtons = document.querySelectorAll('button');
 
+                // 查找所有可能的确定按钮
                 for (var i = 0; i < allButtons.length; i++) {
                     var btn = allButtons[i];
                     var text = (btn.textContent || btn.innerText || '').trim();
-                    var btnRect = btn.getBoundingClientRect();
-                    var isVisible = btnRect.width > 0 && btnRect.height > 0 && 
+                    var rect = btn.getBoundingClientRect();
+                    var isVisible = rect.width > 0 && rect.height > 0 && 
                                   btn.offsetParent !== null && !btn.disabled;
 
-                    if (isVisible && (text === '确 定' || text === '确定' || text === 'OK' || text === '应用' || text === '完成')) {
+                    // 检查是否是确定按钮（文本匹配或者是蓝色按钮）
+                    var isPrimaryButton = btn.classList.contains('ant-btn-primary') || 
+                                         btn.classList.contains('primary-button') ||
+                                         btn.style.backgroundColor.includes('blue') ||
+                                         btn.style.backgroundColor.includes('rgb');
+
+                    if (isVisible && (text === '确定' || text === '确 定' || 
+                                     (isPrimaryButton && (text === '确定' || text === 'OK' || text === '完成')))) {
                         confirmButton = {
                             element: btn,
                             text: text,
-                            x: Math.round(btnRect.x),
-                            y: Math.round(btnRect.y),
-                            location: 'page'
+                            x: Math.round(rect.x),
+                            y: Math.round(rect.y),
+                            className: btn.className
                         };
                         break;
                     }
                 }
-            }
 
-            if (confirmButton) {
-                confirmButton.element.style.border = '3px solid orange';
-                confirmButton.element.style.boxShadow = '0 0 10px orange';
-
-                try {
-                    confirmButton.element.click();
-                    return {
-                        success: true, 
-                        text: confirmButton.text,
-                        x: confirmButton.x,
-                        y: confirmButton.y,
-                        location: confirmButton.location
-                    };
-                } catch(e) {
-                    return {success: false, error: e.message};
+                if (confirmButton) {
+                    confirmButton.element.style.border = '3px solid orange';
+                    confirmButton.element.style.boxShadow = '0 0 10px orange';
+                    return confirmButton;
                 }
-            }
 
-            return {success: false, message: '未找到确定按钮'};
-        """)
-
-        if confirm_result.get('success'):
-            print(f"  ✓ 已点击确定按钮: '{confirm_result['text']}'")
-            print(f"    位置: ({confirm_result.get('x', 0)}, {confirm_result.get('y', 0)})")
-            print(f"    来源: {confirm_result.get('location', 'unknown')}")
-            time.sleep(2)
-        else:
-            print(f"  ⚠ {confirm_result.get('message', '确定按钮点击失败')}")
-            # 列出所有可见按钮用于调试
-            all_btns = driver.execute_script("""
-                var buttons = document.querySelectorAll('button');
-                var result = [];
-                for (var i = 0; i < buttons.length; i++) {
-                    var rect = buttons[i].getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        result.push((buttons[i].textContent || '').trim());
-                    }
-                }
-                return result.slice(0, 10);
+                return null;
             """)
-            print(f"  调试：找到的前10个按钮: {all_btns}")
 
-            # 尝试按ESC关闭
+            if confirm_result:
+                print(f"    ✓ 找到确定按钮: '{confirm_result['text']}'")
+                print(f"      位置: ({confirm_result.get('x', 0)}, {confirm_result.get('y', 0)})")
+                print(f"      类名: {confirm_result.get('className', 'N/A')}")
+
+                # 尝试点击
+                try:
+                    # 方式1: 直接点击
+                    confirm_elem = driver.execute_script("return arguments[0];", confirm_result['element'])
+                    confirm_elem.click()
+                    print(f"    ✓ 成功点击确定按钮（普通点击）")
+                    confirm_button_clicked = True
+                    break
+                except:
+                    try:
+                        # 方式2: JavaScript点击
+                        driver.execute_script("arguments[0].click();", confirm_result['element'])
+                        print(f"    ✓ 成功点击确定按钮（JavaScript点击）")
+                        confirm_button_clicked = True
+                        break
+                    except Exception as e:
+                        print(f"    ⚠ 点击失败: {e}")
+                        if attempt < 2:
+                            time.sleep(1)
+            else:
+                print(f"    ⚠ 未找到确定按钮")
+                if attempt < 2:
+                    time.sleep(1)
+
+        # 方式2: 如果上面的方法都失败，尝试通过坐标点击右下角
+        if not confirm_button_clicked:
+            print("\n  → 尝试通过坐标点击右下角的确定按钮...")
+            try:
+                # 获取字段选择器的位置
+                menu_info = driver.execute_script("""
+                    var menu = document.querySelector('.filter-indicator-container');
+                    if (menu) {
+                        var rect = menu.getBoundingClientRect();
+                        return {
+                            x: Math.round(rect.x),
+                            y: Math.round(rect.y),
+                            width: Math.round(rect.width),
+                            height: Math.round(rect.height)
+                        };
+                    }
+                    return null;
+                """)
+
+                if menu_info:
+                    # 计算右下角确定按钮的大致位置
+                    button_x = menu_info['x'] + menu_info['width'] - 60
+                    button_y = menu_info['y'] + menu_info['height'] - 30
+
+                    # 使用ActionChains点击
+                    actions.move_by_offset(button_x, button_y).click().perform()
+                    actions.move_by_offset(-button_x, -button_y).perform()  # 重置鼠标位置
+                    print(f"    ✓ 已通过坐标点击确定按钮")
+                    confirm_button_clicked = True
+            except Exception as e:
+                print(f"    ⚠ 坐标点击失败: {e}")
+
+        # 方式3: 如果还是失败，按ESC或点击已选字段来关闭
+        if not confirm_button_clicked:
+            print("\n  → 所有点击方式都失败，尝试按ESC关闭...")
             try:
                 actions.send_keys(Keys.ESCAPE).perform()
-                print(f"  → 已按ESC键关闭")
+                print(f"    ✓ 已按ESC键关闭")
                 time.sleep(1)
             except:
                 pass
 
-        time.sleep(2)
+        time.sleep(3)
 
         print(f"\n{'=' * 60}")
-        print(f"✓ 已选字段设置完成 (成功选择: {selected_count}/{len(target_fields)})")
+        print(f"✓ 已选字段设置完成（成功选择: {selected_count}/{len(target_fields)}）")
         print(f"{'=' * 60}")
 
         return selected_count > 0
@@ -1429,150 +1161,13 @@ def select_delivery_rate_fields():
         return False
 
 
-def read_table_data():
-    """新增：读取表格数据"""
-    try:
-        print(f"\n{'=' * 60}")
-        print("开始读取表格数据")
-        print(f"{'=' * 60}")
-
-        time.sleep(3)  # 等待表格加载
-
-        # 查找表格
-        table_data = driver.execute_script("""
-            var tables = document.querySelectorAll('table, .ant-table, .data-table, div[class*="table"]');
-            var result = {
-                found: false,
-                tables: []
-            };
-
-            for (var i = 0; i < tables.length; i++) {
-                var table = tables[i];
-                var rect = table.getBoundingClientRect();
-                var isVisible = rect.width > 0 && rect.height > 0 && table.offsetParent !== null;
-
-                if (isVisible && rect.width > 200 && rect.height > 100) {
-                    // 尝试读取表头
-                    var headers = [];
-                    var headerRows = table.querySelectorAll('thead tr, tr:first-child, div[class*="header"]');
-
-                    if (headerRows.length > 0) {
-                        var headerCells = headerRows[0].querySelectorAll('th, td, div[class*="cell"]');
-                        for (var j = 0; j < headerCells.length; j++) {
-                            var text = (headerCells[j].textContent || headerCells[j].innerText || '').trim();
-                            if (text) headers.push(text);
-                        }
-                    }
-
-                    // 尝试读取数据行
-                    var rows = [];
-                    var dataRows = table.querySelectorAll('tbody tr, tr:not(:first-child), div[class*="row"]:not([class*="header"])');
-
-                    for (var k = 0; k < Math.min(dataRows.length, 20); k++) {
-                        var row = dataRows[k];
-                        var cells = row.querySelectorAll('td, div[class*="cell"]');
-                        var rowData = [];
-
-                        for (var m = 0; m < cells.length; m++) {
-                            var cellText = (cells[m].textContent || cells[m].innerText || '').trim();
-                            rowData.push(cellText);
-                        }
-
-                        if (rowData.length > 0) {
-                            rows.push(rowData);
-                        }
-                    }
-
-                    if (headers.length > 0 || rows.length > 0) {
-                        result.tables.push({
-                            index: i,
-                            headers: headers,
-                            rows: rows,
-                            rowCount: dataRows.length,
-                            x: Math.round(rect.x),
-                            y: Math.round(rect.y)
-                        });
-                        result.found = true;
-                    }
-                }
-            }
-
-            return result;
-        """)
-
-        if not table_data['found'] or len(table_data['tables']) == 0:
-            print("❌ 未找到可读取的表格")
-            return False
-
-        print(f"✓ 找到 {len(table_data['tables'])} 个表格")
-
-        # 打印所有找到的表格数据
-        for idx, table in enumerate(table_data['tables'], 1):
-            print(f"\n{'─' * 60}")
-            print(f"表格 #{idx} - 位置: ({table['x']}, {table['y']})")
-            print(f"总行数: {table['rowCount']}")
-            print(f"{'─' * 60}")
-
-            # 打印表头
-            if table['headers']:
-                print("\n【表头】")
-                print(" | ".join(table['headers']))
-                print("─" * 60)
-
-            # 打印数据行
-            if table['rows']:
-                print(f"\n【数据】(显示前{min(len(table['rows']), 10)}行)")
-                for row_idx, row in enumerate(table['rows'][:10], 1):
-                    print(f"{row_idx:3d}. {' | '.join(row)}")
-
-                if len(table['rows']) > 10:
-                    print(f"\n... 还有 {len(table['rows']) - 10} 行未显示")
-
-        # 保存数据到文件
-        try:
-            import csv
-            timestamp = int(time.time())
-
-            for idx, table in enumerate(table_data['tables'], 1):
-                filename = f"table_data_{timestamp}_table{idx}.csv"
-
-                with open(filename, 'w', encoding='utf-8-sig', newline='') as f:
-                    writer = csv.writer(f)
-
-                    # 写入表头
-                    if table['headers']:
-                        writer.writerow(table['headers'])
-
-                    # 写入数据
-                    for row in table['rows']:
-                        writer.writerow(row)
-
-                print(f"\n✓ 表格 #{idx} 已保存到: {filename}")
-
-        except Exception as e:
-            print(f"⚠ 保存CSV文件失败: {e}")
-
-        print(f"\n{'=' * 60}")
-        print("✓ 表格数据读取完成")
-        print(f"{'=' * 60}")
-
-        return True
-
-    except Exception as e:
-        print(f"❌ 读取表格数据异常: {e}")
-        import traceback
-        traceback.print_exc()
-        return False
-
-
 def find_and_click_query_button():
-    """查找并点击查询按钮 - 点击完成率输入框右侧最近的查询按钮"""
+    """查找并点击查询按钮"""
     try:
         print("\n" + "=" * 60)
         print("查找并点击查询按钮（完成率右侧最近的）")
         print("=" * 60)
 
-        # 先找到完成率输入框的位置
         rate_input_pos = driver.execute_script("""
             var inputs = document.querySelectorAll('input.ant-input-number-input');
             for (var i = 0; i < inputs.length; i++) {
@@ -1581,8 +1176,8 @@ def find_and_click_query_button():
                 var value = input.value;
                 if (rect.width > 0 && rect.height > 0 && (value === '0.8' || value === '0.9')) {
                     return {
-                        x: rect.x + rect.width,  // 右边缘
-                        y: rect.y + rect.height / 2,  // 中心点
+                        x: rect.x + rect.width,
+                        y: rect.y + rect.height / 2,
                         width: rect.width,
                         height: rect.height
                     };
@@ -1596,7 +1191,6 @@ def find_and_click_query_button():
         else:
             print("⚠ 未找到完成率输入框，使用默认查找方式")
 
-        # 查找所有查询按钮，并计算与完成率输入框的距离
         button_info = driver.execute_script("""
             var ratePos = arguments[0];
             var buttons = document.querySelectorAll('button.query-area-button, button.query-button, button.ant-btn-primary, button');
@@ -1608,7 +1202,6 @@ def find_and_click_query_button():
                 var rect = btn.getBoundingClientRect();
                 var isVisible = rect.width > 0 && rect.height > 0 && btn.offsetParent !== null;
 
-                // 查找包含"查询"或"查 询"的按钮
                 if (isVisible && !btn.disabled && (text.includes('查询') || text.includes('查 询'))) {
                     var btnCenterX = rect.x + rect.width / 2;
                     var btnCenterY = rect.y + rect.height / 2;
@@ -1617,13 +1210,11 @@ def find_and_click_query_button():
                     var isRight = false;
 
                     if (ratePos) {
-                        // 计算距离（优先考虑右侧的按钮）
                         var dx = btnCenterX - ratePos.x;
                         var dy = btnCenterY - ratePos.y;
                         distance = Math.sqrt(dx * dx + dy * dy);
-                        isRight = btnCenterX > ratePos.x;  // 是否在右侧
+                        isRight = btnCenterX > ratePos.x;
 
-                        // 如果在右侧，距离权重降低（优先选择）
                         if (isRight) {
                             distance = distance * 0.5;
                         }
@@ -1641,7 +1232,6 @@ def find_and_click_query_button():
                 }
             }
 
-            // 按距离排序，选择最近的
             candidates.sort(function(a, b) { 
                 return a.distance - b.distance; 
             });
@@ -1651,35 +1241,13 @@ def find_and_click_query_button():
 
         if not button_info:
             print("❌ 未找到查询按钮")
-            # 打印所有按钮用于调试
-            all_buttons = driver.execute_script("""
-                var buttons = document.querySelectorAll('button');
-                var result = [];
-                for (var i = 0; i < buttons.length; i++) {
-                    var rect = buttons[i].getBoundingClientRect();
-                    if (rect.width > 0 && rect.height > 0) {
-                        result.push({
-                            text: (buttons[i].textContent || buttons[i].innerText || '').trim(),
-                            className: buttons[i].className,
-                            x: Math.round(rect.x),
-                            y: Math.round(rect.y)
-                        });
-                    }
-                }
-                return result.slice(0, 10);
-            """)
-            print(f"找到的前10个按钮: {all_buttons}")
             return False
 
         position_info = "右侧" if button_info.get('isRight') else "左侧"
         print(f"✓ 找到最近的查询按钮 [{position_info}]")
         print(f"  文本: '{button_info['text']}'")
         print(f"  位置: ({button_info['x']}, {button_info['y']})")
-        print(f"  类名: {button_info['className']}")
-        if rate_input_pos:
-            print(f"  距离: {button_info.get('distance', 'N/A'):.1f}px")
 
-        # 高亮按钮
         driver.execute_script(
             "arguments[0].style.border='3px solid red';"
             "arguments[0].style.boxShadow='0 0 10px red';",
@@ -1687,7 +1255,6 @@ def find_and_click_query_button():
         )
         time.sleep(1.5)
 
-        # 点击按钮
         try:
             button_info['element'].click()
             print("✓ 成功点击查询按钮（普通点击）")
@@ -1697,7 +1264,6 @@ def find_and_click_query_button():
 
         time.sleep(0.5)
 
-        # 移除高亮
         driver.execute_script(
             "arguments[0].style.border='';"
             "arguments[0].style.boxShadow='';",
@@ -1723,19 +1289,16 @@ def main():
         print("开始执行自动化流程")
         print("=" * 60)
 
-        # 登录
         print("\n[1/9] 执行登录...")
         if not login():
             print("❌ 登录失败，退出")
             return
 
-        # 打开QBI页面
         print("\n[2/9] 打开QBI页面...")
         driver.get(QBI_URL)
         time.sleep(5)
         print("✓ QBI页面已打开")
 
-        # 点击other-login
         print("\n[3/9] 点击other-login...")
         if not click_other_login():
             print("⚠ 点击other-login失败，尝试继续")
@@ -1743,20 +1306,17 @@ def main():
 
         time.sleep(5)
 
-        # 切换iframe
         print("\n[4/9] 切换到iframe...")
         if not switch_to_iframe():
             print("❌ 切换iframe失败，退出")
             return
 
-        # 点击第四个tab
         print("\n[5/9] 点击第四个tab...")
         if not click_fourth_tab():
             print("⚠ 点击第四个tab可能失败，但继续执行")
 
         time.sleep(3)
 
-        # 通过日历设置日期（昨天到今天）
         print("\n[6/9] 设置日期（昨天到今天）...")
         date_success = set_dates_via_calendar()
         if date_success:
@@ -1764,15 +1324,13 @@ def main():
         else:
             print("⚠ 日期设置可能失败")
 
-        # 设置提货仓
-        print("\n[7/9] 设置提货仓...")
+        print("\n[7/9] 设置提货仓（包含COL）...")
         warehouse_success = set_warehouse_selection()
         if warehouse_success:
             print("✓ 提货仓设置完成")
         else:
             print("⚠ 提货仓设置可能失败")
 
-        # 设置配送完成率为0.8
         print("\n[8/9] 设置配送完成率...")
         rate_success = set_delivery_completion_rate()
         if rate_success:
@@ -1780,44 +1338,16 @@ def main():
         else:
             print("⚠ 配送完成率设置可能失败")
 
-        # 设置已选字段（妥投率）
         print("\n[9/9] 设置已选字段（妥投率）...")
-
-        # 先截图看看当前状态
-        try:
-            screenshot_path = f"before_field_selection_{int(time.time())}.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"  已保存设置前截图: {screenshot_path}")
-        except:
-            pass
-
         field_success = select_delivery_rate_fields()
         if field_success:
             print("✓ 已选字段设置完成")
         else:
             print("⚠ 已选字段设置可能失败")
 
-        # 设置后再截图
-        try:
-            screenshot_path = f"after_field_selection_{int(time.time())}.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"  已保存设置后截图: {screenshot_path}")
-        except:
-            pass
-
-        # 等待一下确保设置生效
         print("\n等待5秒确保设置生效...")
         time.sleep(5)
 
-        # 截图保存结果
-        try:
-            screenshot_path = f"result_{int(time.time())}.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"\n✓ 已保存截图: {screenshot_path}")
-        except:
-            pass
-
-        # 查询 - 点击两次
         print("\n[查询] 第1次点击查询按钮...")
         if find_and_click_query_button():
             print("✓ 第1次查询执行成功")
@@ -1832,23 +1362,14 @@ def main():
         else:
             print("⚠ 第2次查询执行可能失败")
 
-        # 等待查询结果
         print("\n等待查询结果加载...")
         time.sleep(5)
-
-        # 最终截图
-        try:
-            screenshot_path = f"final_result_{int(time.time())}.png"
-            driver.save_screenshot(screenshot_path)
-            print(f"✓ 已保存最终截图: {screenshot_path}")
-        except:
-            pass
 
         print("\n" + "=" * 60)
         print("✓ 流程执行完毕")
         print("=" * 60)
         print("\n浏览器保持打开状态，请检查结果")
-        print("请查看已选字段是否显示为 '已选字段(13)'")
+        print("请查看已选字段是否显示为 '已选字段(16)' 或更多")
 
     except Exception as e:
         print(f"\n❌ 主流程异常: {e}")
