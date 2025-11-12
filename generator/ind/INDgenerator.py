@@ -19,21 +19,20 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-
-TASK_CODE = "TSK000000004296" #分箱任务编号，每次替换
+TASK_CODE = "TSK000000004449"  # 分箱任务编号，每次替换
 
 
 MAX_RETRIES = 3  # 重试次数
 
 
-# PDF生成
+# PDF生成 - 第一种格式（包裹号条形码）
 def generate_barcodes_pdf(barcode_data, filename="barcodes.pdf"):
     pdfmetrics.registerFont(TTFont('SimSun', 'simsun.ttc'))
     c = canvas.Canvas(filename, pagesize=A4)
     page_width, page_height = A4
     cols, rows = 3, 6
     x_margin, y_margin = 10 * mm, 10 * mm
-    x_spacing, y_spacing = 65 * mm, 45 * mm  # STL专用间距
+    x_spacing, y_spacing = 60 * mm, 40 * mm
     x0, y0 = x_margin, page_height - y_margin
     col, row = 0, 0
 
@@ -62,6 +61,64 @@ def generate_barcodes_pdf(barcode_data, filename="barcodes.pdf"):
 
     c.save()
     print(f"✅ PDF已生成: {filename}")
+
+
+# PDF生成 - 第二种格式（前缀+分箱号条形码）
+def generate_barcodes_with_prefix(prefix, box_numbers, filename=None):
+    if not box_numbers:
+        print("⚠️ 没有分箱号，跳过生成")
+        return
+
+    start_box = box_numbers[0]
+    end_box = box_numbers[-1]
+    if filename is None:
+        filename = f"{prefix}_{start_box}-{end_box}.pdf"
+
+    c = canvas.Canvas(filename, pagesize=A4)
+    page_width, page_height = A4
+
+    # 每页排版参数
+    cols, rows = 3, 7  # 每行 3 个
+    x_margin, y_margin = 20 * mm, 20 * mm
+    x_spacing, y_spacing = 65 * mm, 40 * mm
+
+    x0, y0 = x_margin, page_height - y_margin
+    col, row = 0, 0
+
+    for box_number in box_numbers:
+        barcode_value = f"{prefix}{box_number}1"
+
+        # Code128 条码（扁长、矮）
+        barcode = code128.Code128(
+            barcode_value,
+            barHeight=12 * mm,  # 高度矮
+            barWidth=0.6,  # 拉长条码
+            humanReadable=False
+        )
+
+        x = x0 + col * x_spacing
+        y = y0 - row * y_spacing
+
+        # 绘制条码
+        barcode.drawOn(c, x, y)
+
+        # 条码下方文字备注
+        c.setFont("Helvetica", 9)
+        text = f"{barcode_value} {box_number}"
+        text_width = c.stringWidth(text, "Helvetica", 9)
+        c.drawString(x + (barcode.width - text_width) / 2, y - 12, text)
+
+        # 更新列、行
+        col += 1
+        if col >= cols:
+            col = 0
+            row += 1
+        if row >= rows:
+            row = 0
+            c.showPage()  # 换页
+
+    c.save()
+    print(f"✅ 批量条码已生成: {filename}")
 
 
 # 查询单个分箱（带重试）
@@ -161,17 +218,34 @@ def main():
         except:
             pass
 
-        # 查询所有分箱（401-416）
+        # 查询所有分箱（150-188 + 228, 229）
         all_barcodes = []
-        for cage_number in range(401, 417):
+        cage_numbers = list(range(150, 189)) + [228, 229]
+
+        for cage_number in cage_numbers:
             package_number = query_cage(driver, cage_number)
             if package_number:
                 all_barcodes.append((package_number, cage_number))
 
-        print(f"\n成功: {len(all_barcodes)}/16")
+        print(f"\n成功: {len(all_barcodes)}/{len(cage_numbers)}")
 
+        # 生成第一种PDF（包裹号条形码）
         if all_barcodes:
-            generate_barcodes_pdf(all_barcodes, filename="./STL箱包裹号.pdf")
+            generate_barcodes_pdf(all_barcodes, filename="IND分箱包裹号.pdf")
+
+        # 生成第二种PDF（前缀+分箱号条形码）
+        # 使用相同的分箱号列表
+        print("\n开始生成批量条码PDF...")
+        generate_barcodes_with_prefix(
+            prefix=TASK_CODE,
+            box_numbers=cage_numbers,
+            filename=f"IND_大包条码.pdf"
+        )
+
+        print("\n🎉 所有任务完成！")
+        print(f"   - 包裹号PDF: IND分箱包裹号.pdf")
+        print(f"   - 批量条码PDF: IND_大包条码.pdf")
+        print(f"   - 分箱号范围: 150-188 + 228, 229")
 
     finally:
         driver.quit()
