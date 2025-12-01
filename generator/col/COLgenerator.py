@@ -19,13 +19,12 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-TASK_CODE = "TSK000000004475"  # 分箱任务编号，每次替换
+TASK_CODE = "TSK000000004860"  # 分箱任务编号，每次替换
+
+MAX_RETRIES = 3  # 总共尝试次数（首次 + 重试2次）
 
 
-MAX_RETRIES = 3  # 重试次数
-
-
-# PDF生成 - 第一种格式（包裹号）
+# PDF生成 - 第一种格式(包裹号)
 def generate_barcodes_pdf(barcode_data, filename="barcodes.pdf"):
     pdfmetrics.registerFont(TTFont('SimSun', 'simsun.ttc'))
     c = canvas.Canvas(filename, pagesize=A4)
@@ -63,7 +62,7 @@ def generate_barcodes_pdf(barcode_data, filename="barcodes.pdf"):
     print(f"✅ PDF已生成: {filename}")
 
 
-# PDF生成 - 第二种格式（前缀+分箱号）
+# PDF生成 - 第二种格式(前缀+分箱号)
 def generate_barcodes_with_prefix(prefix, box_numbers, filename=None):
     if not box_numbers:
         print("⚠️ 没有有效的分箱号，跳过生成")
@@ -88,7 +87,7 @@ def generate_barcodes_with_prefix(prefix, box_numbers, filename=None):
     for box_number in box_numbers:
         barcode_value = f"{prefix}{box_number}1"
 
-        # Code128 条码（扁长、矮）
+        # Code128 条码(扁长、矮)
         barcode = code128.Code128(
             barcode_value,
             barHeight=12 * mm,  # 高度矮
@@ -121,10 +120,67 @@ def generate_barcodes_with_prefix(prefix, box_numbers, filename=None):
     print(f"✅ 批量条码已生成: {filename}")
 
 
-# 查询单个分箱（带重试）
+# 导航到分箱列表页面
+def navigate_to_cage_list(driver):
+    """导航到分箱列表页面"""
+    try:
+        # 点击分箱管理菜单
+        menu_titles = WebDriverWait(driver, 20).until(
+            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".ant-menu-title-content"))
+        )
+        for menu in menu_titles:
+            if "分箱管理" in menu.text:
+                menu.click()
+                break
+        time.sleep(2)
+
+        # 点击分箱列表
+        WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-menu-id="/block/list"]'))
+        ).click()
+        time.sleep(3)
+
+        # 关闭Dashboard标签页
+        try:
+            driver.find_element(By.CSS_SELECTOR, ".ant-dropdown-trigger .ant-tabs-tab-remove").click()
+            time.sleep(1)
+        except:
+            pass
+
+        return True
+    except Exception as e:
+        print(f"❌ 导航到分箱列表失败: {e}")
+        return False
+
+
+# 查询单个分箱(带重试)
 def query_cage(driver, cage_number):
     for attempt in range(MAX_RETRIES):
         try:
+            # 重试时先重新打开分箱列表
+            if attempt > 0:
+                print(f"⚠ 重试 {cage_number} ({attempt + 1}/{MAX_RETRIES}) - 重新打开分箱列表")
+                # 先回到主页面，再刷新
+                try:
+                    driver.get(LOGIN_URL.replace("/login", ""))  # 回到首页
+                    time.sleep(3)
+                except:
+                    driver.refresh()
+                    time.sleep(5)
+
+                # 尝试重新导航
+                retry_count = 0
+                while retry_count < 2:
+                    if navigate_to_cage_list(driver):
+                        print(f"✓ 分箱列表已打开，开始重新查询")
+                        break
+                    retry_count += 1
+                    print(f"❌ 导航失败，再次尝试 ({retry_count}/2)")
+                    time.sleep(3)
+                else:
+                    print(f"❌ 多次尝试后仍无法打开分箱列表")
+                    continue
+
             # 输入搜索条件
             WebDriverWait(driver, 10).until(
                 EC.presence_of_element_located((By.ID, "searchForm_taskCode"))
@@ -170,9 +226,9 @@ def query_cage(driver, cage_number):
 
         except Exception as e:
             if attempt < MAX_RETRIES - 1:
-                print(f"⚠ 重试 {cage_number} ({attempt + 1}/{MAX_RETRIES})")
-                driver.refresh()
-                time.sleep(2)
+                print(f"⚠ 查询出错: {e}")
+                # 继续下一次循环，会在循环开始时重新打开分箱列表
+                continue
             else:
                 print(f"❌ 失败: {cage_number}")
                 return None
@@ -196,29 +252,12 @@ def main():
         ).click()
         time.sleep(5)
 
-        # 导航到分箱列表
-        menu_titles = WebDriverWait(driver, 20).until(
-            EC.presence_of_all_elements_located((By.CSS_SELECTOR, ".ant-menu-title-content"))
-        )
-        for menu in menu_titles:
-            if "分箱管理" in menu.text:
-                menu.click()
-                break
-        time.sleep(2)
+        # 首次导航到分箱列表
+        if not navigate_to_cage_list(driver):
+            print("❌ 无法进入分箱列表页面，退出")
+            return
 
-        WebDriverWait(driver, 20).until(
-            EC.element_to_be_clickable((By.CSS_SELECTOR, '[data-menu-id="/block/list"]'))
-        ).click()
-        time.sleep(3)
-
-        # 关闭Dashboard
-        try:
-            driver.find_element(By.CSS_SELECTOR, ".ant-dropdown-trigger .ant-tabs-tab-remove").click()
-            time.sleep(1)
-        except:
-            pass
-
-        # 查询所有分箱（601-615）
+        # 查询所有分箱(601-615)
         all_barcodes = []
         successful_cage_numbers = []
 
@@ -230,11 +269,11 @@ def main():
 
         print(f"\n成功: {len(all_barcodes)}/15")
 
-        # 生成第一种PDF（包裹号）
+        # 生成第一种PDF(包裹号)
         if all_barcodes:
             generate_barcodes_pdf(all_barcodes, filename="COL分箱包裹号.pdf")
 
-        # 生成第二种PDF（前缀+分箱号）
+        # 生成第二种PDF(前缀+分箱号)
         if successful_cage_numbers:
             generate_barcodes_with_prefix(
                 prefix=TASK_CODE,
