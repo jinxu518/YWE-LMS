@@ -19,7 +19,7 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-TASK_CODE = "TSK000000004860"  # 分箱任务编号，每次替换
+TASK_CODE = "TSK000000005925"  # 分箱任务编号，每次替换
 
 MAX_RETRIES = 3  # 总共尝试次数（首次 + 重试2次）
 

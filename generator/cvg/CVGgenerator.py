@@ -19,7 +19,7 @@ USERNAME = config.get("credentials", "username")
 PASSWORD = config.get("credentials", "password")
 LOGIN_URL = "https://lms.yweinternal.com/login"
 
-TASK_CODE = "TSK000000004862"  # 分箱任务编号，每次替换
+TASK_CODE = "TSK000000005975"  # 分箱任务编号，每次替换
 
 MAX_RETRIES = 3  # 总共尝试次数（首次 + 重试2次）
 
@@ -253,7 +253,7 @@ def main():
 
         # 查询所有分箱（301-335）
         all_barcodes = []
-        for cage_number in range(314, 336):
+        for cage_number in range(301, 336):
             package_number = query_cage(driver, cage_number)
             if package_number:
                 all_barcodes.append((package_number, cage_number))
